@@ -20,6 +20,9 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework import renderers
 
+from rest_framework import viewsets
+from rest_framework.decorators import detail_route
+
 # Create your views here.
 
 # class JSONResponse(HttpResponse):
@@ -104,27 +107,61 @@ from rest_framework import renderers
 #         snippet.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class SnippetList(generics.ListCreateAPIView):
-    queryset = Snipple.objects.all()
-    serializer_class = SnippetSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly)
+# class SnippetList(generics.ListCreateAPIView):
+#     queryset = Snipple.objects.all()
+#     serializer_class = SnippetSerializer
+#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+#                           IsOwnerOrReadOnly)
+#
+#     def perform_create(self, serializer):
+#         serializer.save(owner=self.request.user)
+#
+# class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Snipple.objects.all()
+#     serializer_class = SnippetSerializer
+#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+#
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#
+# class UserDetail(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#
+# @api_view(('GET',))
+# def api_root(request, format=None):
+#     return Response({
+#         'users': reverse('user-list', request=request, format=format),
+#         'snippets': reverse('snippet-list', request=request, format=format),
+#     })
+#
+# class SnippetHighlight(generics.GenericAPIView):
+#     queryset = Snipple.objects.all()
+#     renderer_classes = (renderers.StaticHTMLRenderer,)
+#
+#     def get(self, request, *args, **kwargs):
+#         snippet = self.get_object()
+#         return Response(snippet.highlighted)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
-class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class SnippetViewSet(viewsets.ModelViewSet):
     queryset = Snipple.objects.all()
     serializer_class = SnippetSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    @detail_route(renderer_class=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
 
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 @api_view(('GET',))
 def api_root(request, format=None):
@@ -132,11 +169,3 @@ def api_root(request, format=None):
         'users': reverse('user-list', request=request, format=format),
         'snippets': reverse('snippet-list', request=request, format=format),
     })
-
-class SnippetHighlight(generics.GenericAPIView):
-    queryset = Snipple.objects.all()
-    renderer_classes = (renderers.StaticHTMLRenderer,)
-
-    def get(self, request, *args, **kwargs):
-        snippet = self.get_object()
-        return Response(snippet.highlighted)
