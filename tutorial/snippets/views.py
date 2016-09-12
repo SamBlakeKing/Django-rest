@@ -22,6 +22,14 @@ from rest_framework import renderers
 
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import ParseError
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
+from rest_framework.authentication import TokenAuthentication
+from snippets.models import MyUser
+
+import logging
+import snippets
 
 # Create your views here.
 
@@ -144,16 +152,59 @@ from rest_framework.decorators import detail_route
 #         snippet = self.get_object()
 #         return Response(snippet.highlighted)
 
+class AuthView(APIView):
+    def get(self, request):
+        return Response({'detail':'GET Response'})
 
+    def post(self, request):
+        try:
+            data = request.data
+        except ParseError as error:
+            return Response('Invaild JSON - {0}'.format(error.detail),
+                            status=status.HTTP_400_BAD_REQUEST)
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
+        if "username" not in data or "password" not in data:
+            return Response('Wrong Credentials', status=status.HTTP_401_UNAUTHORIZED)
+
+        user = authenticate(username=data['username'], password=data['password'])
+        if not user:
+            return Response('Wrong user or password', status=status.HTTP_403_FORBIDDEN)
+
+        token = Token.objects.get_or_create(user=user)
+        return Response({'detail': "POST answer", 'token':token[0].key})
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = MyUser.objects.all()
     serializer_class = UserSerializer
+
+    def change_password(self, userId, request):
+        if not userId:
+            return Response('Update failed', status=status.HTTP_403_FORBIDDEN)
+
+        if 'password' in request.data:
+            password = request.data['password']
+        else:
+            password = '123456'
+
+        user = MyUser.objects.get(pk=userId)
+        user.set_password(password)
+        user.save()
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        userId = super(UserViewSet,self).create(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
+
+    def update(self, request, *args, **kwargs):
+        userId = super(UserViewSet, self).update(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
 
 class SnippetViewSet(viewsets.ModelViewSet):
     queryset = Snipple.objects.all()
     serializer_class = SnippetSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    authentication_classes = (TokenAuthentication, )
+    permission_classes = (permissions.IsAuthenticated, snippets.permissions.IsOwnerOrReadOnly)
 
     @detail_route(renderer_class=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
@@ -161,7 +212,12 @@ class SnippetViewSet(viewsets.ModelViewSet):
         return Response(snippet.highlighted)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        raw_token = self.request.META.get('HTTP_AUTHORIZATION')
+        token = raw_token.split(' ')[-1]
+        userId = Token.objects.get(key=token).user_id
+
+        user = MyUser.objects.get(pk=userId)
+        serializer.save(owner=user)
 
 @api_view(('GET',))
 def api_root(request, format=None):

@@ -39,20 +39,28 @@ snippet_highlight = SnippetViewSet.as_view({
     'get': 'highlight'
 })
 user_list = UserViewSet.as_view({
-    'get': 'list'
+    'get': 'list',
+    'post': 'create',
 })
+
 user_detail = UserViewSet.as_view({
-    'get': 'retrieve'
+    'get': 'retrieve',
+    'delete': 'destroy'
 })
 
 urlpatterns = format_suffix_patterns(patterns('snippets.views',
-    url(r'^$', 'api_root'),
+    url(r'^$', views.api_root),
     url(r'^snippets/$', snippet_list, name='snippet-list'),
     url(r'^snippets/(?P<pk>[0-9]+)/$', snippet_detail, name='snippet-detail'),
     url(r'^snippets/(?P<pk>[0-9]+)/highlight/$', snippet_highlight, name='snippet-highlight'),
     url(r'^users/$', user_list, name='user-list'),
-    url(r'^users/(?P<pk>[0-9]+)/$', user_detail, name='user-detail')
+    url(r'^users/(?P<pk>[0-9]+)/$', user_detail, name='user-detail'),
 ))
+
+urlpatterns += [
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^auth/', views.AuthView.as_view()),
+]
 
 # from snippets import views
 # from rest_framework.routers import DefaultRouter
