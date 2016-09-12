@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from django.contrib.auth.models import User
-from snippets.serializers import UserSerializer
+from snippets.serializers import UserSerializer, TeamUserSerializer, StuUserSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from snippets.permissions import IsOwnerOrReadOnly
@@ -26,7 +26,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework.authentication import TokenAuthentication
-from snippets.models import MyUser
+from snippets.models import MyUser, TeamUser, StuUser
 
 import logging
 import snippets
@@ -218,6 +218,60 @@ class SnippetViewSet(viewsets.ModelViewSet):
 
         user = MyUser.objects.get(pk=userId)
         serializer.save(owner=user)
+
+class TeamUserViewSet(viewsets.ModelViewSet):
+    queryset = TeamUser.objects.all()
+    serializer_class = TeamUserSerializer
+
+    def change_password(self, userId, request):
+        if not userId:
+            return Response('Update failed', status=status.HTTP_403_FORBIDDEN)
+
+        if 'password' in request.data:
+            password = request.data['password']
+        else:
+            password = '123456'
+
+        user = TeamUser.objects.get(pk=userId)
+        user.set_password(password)
+        user.save()
+        serializer = TeamUserSerializer(user)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        userId = super(TeamUserViewSet,self).create(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
+
+    def update(self, request, *args, **kwargs):
+        userId = super(TeamUserViewSet, self).update(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
+
+class StuUserViewSet(viewsets.ModelViewSet):
+    queryset = StuUser.objects.all()
+    serializer_class = StuUserSerializer
+
+    def change_password(self, userId, request):
+        if not userId:
+            return Response('Update failed', status=status.HTTP_403_FORBIDDEN)
+
+        if 'password' in request.data:
+            password = request.data['password']
+        else:
+            password = '123456'
+
+        user = StuUser.objects.get(pk=userId)
+        user.set_password(password)
+        user.save()
+        serializer = StuUserSerializer(user)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        userId = super(StuUserViewSet,self).create(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
+
+    def update(self, request, *args, **kwargs):
+        userId = super(StuUserViewSet, self).update(request, *args, **kwargs).data['id']
+        return self.change_password(userId, request)
 
 @api_view(('GET',))
 def api_root(request, format=None):

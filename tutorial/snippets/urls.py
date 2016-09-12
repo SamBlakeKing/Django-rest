@@ -2,7 +2,7 @@ from django.conf.urls import url, patterns
 from snippets import views
 from rest_framework.urlpatterns import format_suffix_patterns
 from django.conf.urls import include
-from snippets.views import SnippetViewSet, UserViewSet
+from snippets.views import SnippetViewSet, UserViewSet, TeamUserViewSet, StuUserViewSet
 
 # urlpatterns = [
 #     url(r'^snippets/$', views.snippet_list),
@@ -48,6 +48,26 @@ user_detail = UserViewSet.as_view({
     'delete': 'destroy'
 })
 
+teamuser_list = TeamUserViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+
+teamuser_detail = TeamUserViewSet.as_view({
+    'get': 'retrieve',
+    'delete': 'destroy'
+})
+
+stuuser_list = StuUserViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+
+stuuser_detail = StuUserViewSet.as_view({
+    'get': 'retrieve',
+    'delete': 'destroy'
+})
+
 urlpatterns = format_suffix_patterns(patterns('snippets.views',
     url(r'^$', views.api_root),
     url(r'^snippets/$', snippet_list, name='snippet-list'),
@@ -55,6 +75,10 @@ urlpatterns = format_suffix_patterns(patterns('snippets.views',
     url(r'^snippets/(?P<pk>[0-9]+)/highlight/$', snippet_highlight, name='snippet-highlight'),
     url(r'^users/$', user_list, name='user-list'),
     url(r'^users/(?P<pk>[0-9]+)/$', user_detail, name='user-detail'),
+    url(r'^teamusers/$', teamuser_list, name='teamuser-list'),
+    url(r'^teamusers/(?P<pk>[0-9]+)/$', teamuser_detail, name='teamuser-detail'),
+    url(r'^stuusers/$', stuuser_list, name='stuuser-list'),
+    url(r'^stuusers/(?P<pk>[0-9]+)/$', stuuser_detail, name='stuuser-detail'),
 ))
 
 urlpatterns += [
