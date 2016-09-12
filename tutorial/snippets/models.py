@@ -114,3 +114,84 @@ class MyUser(AbstractBaseUser):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_admin
+
+class TeamUser(MyUser):
+    leader = models.CharField(max_length=255, default='')
+    logo_path = models.CharField(max_length=255, default='')
+    contact_tel = models.CharField(max_length=255, default='')
+    slogan = models.CharField(max_length=255, default='')
+    about = models.CharField(max_length=255, default='')
+    history = models.CharField(max_length=255, default='')
+    b_type = models.IntegerField(default=0)
+    man_cnt = models.IntegerField(default=0)
+
+    objects = MyUserManager()
+
+    def get_full_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def get_short_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.email
+
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
+
+    class Meta:
+        verbose_name = 'Team User'
+
+class StuUser(MyUser):
+    sex = models.IntegerField(default=0)
+    year = models.IntegerField(default=-1)
+    month = models.IntegerField(default=-1)
+    school = models.CharField(max_length=255, blank=True, null=True, default='')
+    major = models.CharField(max_length=255, blank=True, null=True, default='')
+
+    objects = MyUserManager()
+
+    def get_full_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def get_short_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.email
+
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
+
+    class Meta:
+        verbose_name = 'Student User'

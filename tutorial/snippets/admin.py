@@ -88,3 +88,16 @@ admin.site.register(MyUser, MyUserAdmin)
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
 admin.site.unregister(Group)
+
+from models import TeamUser, StuUser
+
+class TeamUserAdmin(MyUserAdmin):
+    pass
+
+admin.site.register(TeamUser, TeamUserAdmin)
+
+
+class StudentUserAdmin(MyUserAdmin):
+    pass
+
+admin.site.register(StuUser, StudentUserAdmin)
